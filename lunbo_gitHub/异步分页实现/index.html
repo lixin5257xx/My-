@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style type="text/css">
+        table {
+            border: 1px solid #dedede;
+            border-collapse: collapse;
+            width: 500px;
+            margin: 50px auto;
+        }
+
+        table td {
+            border: 1px solid #dedede;
+            padding: 5px;
+            text-align: center;
+        }
+
+        table th {
+            border: 1px solid #dedede;
+            padding: 5px;
+            text-align: center;
+        }
+
+        #div1 {
+            position: absolute;
+            top: 409px;
+            left: 500px;
+            margin: 0 auto;
+        }
+
+        #div1 a {
+            display: block;
+            float: left;
+            margin-right: 5px;
+            width: 35px;
+            height: 25px;
+            padding: 5px;
+            text-align: center;
+            line-height: 25px;
+            background: #dedede;
+            cursor: pointer;
+        }
+
+        #div1 a.active {
+            background: red;
+        }
+
+        .pageLeft {
+            position: absolute;
+            left: 1000px;
+            top: 419px;
+        }
+
+        .gotoPage {
+            position: absolute;
+            top: 480px;
+            left: 500px;
+        }
+
+        .gotoInput {
+            width: 60px;
+            height: 30px;;
+            line-height: 30px;
+            margin: 0 10px
+        }
+    </style>
+</head>
+
+<body>
+<table>
+    <thead>
+    <tr>
+        <th>县</th>
+        <th>数量</th>
+        <th>平均值</th>
+    </tr>
+    </thead>
+    <tbody id="tbody">
+
+    </tbody>
+</table>
+<div id="div1">
+
+</div>
+<div class="pageLeft">当前第<span class="nowPage"></span>页&nbsp;共<span class="pageNum"></span>页 /<span class="tiao"></span>条
+</div>
+<div class="gotoPage">跳转到第<input type="text" value="" class="gotoInput">页 <input type="button" class="btn" value="确定">
+</div>
+</body>
+</html>
+<script src="js/jquery.js"></script>
+<script>
+    $(function () {
+        var btn = document.getElementById('btn');
+        var tbody = document.getElementById("tbody");
+        div = document.getElementById('div1');
+        utils.readLoad();
+        utils.getJson(n);
+
+    })
+    var utils = {
+        getJson: function (n) {
+            $.ajax({
+                type: 'GET',
+                url: 'data2.js',
+                async: 'true',
+                data: '',
+                dataType: 'script',
+                success: function () {
+                    utils.page(n);
+                    utils.aClick();
+                }
+            })
+        },
+        page: function (n) {
+            var dataLength = tableData.length; //总条数
+            var num = 10;//每页显示的个数
+            var page = Math.ceil(dataLength / 10);//总页数
+            var starPage = num * (n - 1);
+            var endPage = starPage + num;
+            var arr = [];
+            var pageStr = '';
+            if (page == 1) {
+                n = 1;
+                for (var i = 0; i < dataLength; i++) {
+                    arr.push('<tr>');
+                    arr.push('<td>' + tableData[i]['C0'] + '</td>');
+                    arr.push('<td>' + tableData[i]['C1'] + '</td>');
+                    arr.push('<td>' + tableData[i]['C2'] + '</td>');
+                    arr.push('</tr>');
+                }
+                var str = arr.join('');
+                tbody.innerHTML = str;
+                div.innerHTML = '<a id="prev">prev</a><a class="page">' + n + '</a><a id="next">next</a>'
+
+            } else {
+                if (n == page) {
+                    var endPage = starPage + dataLength % 10;
+                }
+                for (var i = starPage; i < endPage; i++) {
+                    arr.push('<tr>');
+                    arr.push('<td>' + tableData[i]['C0'] + '</td>');
+                    arr.push('<td>' + tableData[i]['C1'] + '</td>');
+                    arr.push('<td>' + tableData[i]['C2'] + '</td>');
+                    arr.push('</tr>');
+                }
+                var str = arr.join('');
+                tbody.innerHTML = str;
+                if (page < 9) {
+                    for (var i = 1; i <= page; i++) {
+
+                        if (i == n) {
+                            pageStr += '<a class="active page">' + i + '</a>'
+                        } else {
+                            pageStr += '<a class="page">' + i + '</a>'
+                        }
+                    }
+                }
+                div.innerHTML = '<a id="prev">prev</a>' + pageStr + '<a id="next">next</a>'
+            }
+            $('#div1').width((page + 2) * 50)
+            $('.pageNum').text(page)
+            $('.tiao').text(dataLength)
+            $('.nowPage').text(n);
+        },
+        aClick: function () {
+            var dataLength = tableData.length; //总条数
+            var page = Math.ceil(dataLength / 10);//总页数
+            $('.page').each(function () {
+                $(this).on('click', function () {
+                    n = $(this).text()
+                    $(this).addClass('active').siblings().removeClass('active');
+                    utils.getJson(n);
+                })
+            })
+            $('#prev').on('click', function () {
+                if (n != 1) {
+                    n--;
+                    utils.getJson(n);
+                }
+            })
+            $('#next').on('click', function () {
+                if (n != page) {
+                    n++;
+                    utils.getJson(n);
+                }
+            })
+            $('.btn').on('click', function () {
+                if ($('.gotoInput').val() !== '') {
+                    n = $('.gotoInput').val();
+                    if (n <= page) {
+                        utils.getJson(n);
+                    } else {
+                        return false;
+                    }
+                }
+            })
+        },
+        readLoad: function () {
+            n = 1;
+        }
+    }
+</script>
